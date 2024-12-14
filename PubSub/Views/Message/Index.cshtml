@@ -1,0 +1,74 @@
+﻿@model IEnumerable<string> 
+@{
+    Layout = null;
+}
+
+<div style="display: flex; height: 100vh;">
+    <div style="width: 30%; background-color: #f4f4f4; padding: 20px; overflow-y: auto;">
+        <h3>Channels</h3>
+
+        @if (TempData["Success"] != null)
+        {
+            <div style="color: green; margin-bottom: 10px;">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div style="color: red; margin-bottom: 10px;">@TempData["Error"]</div>
+        }
+
+        <form asp-action="CreateChannel" method="post">
+            <div style="margin-bottom: 10px;">
+                <input type="text" name="channelName" placeholder="Enter channel name" style="width: 80%; padding: 5px;" />
+            </div>
+            <button type="submit" style="padding: 5px 10px; cursor: pointer;">Create Channel</button>
+        </form>
+
+        <ul style="list-style: none; padding: 0; margin-top: 20px;">
+            @if (!Model.Any())
+            {
+                <li>No channels created yet.</li>
+            }
+            else
+            {
+                @foreach (var channel in Model)
+                {
+                    <li style="padding: 5px 0; cursor: pointer;">
+                        <a asp-action="ChannelMessages" asp-route-channelName="@channel" style="text-decoration: none; color: #007bff;">
+                            @channel
+                        </a>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+
+    <div style="width: 70%; padding: 20px; background-color: #ffffff;" id="messagesPanel">
+        <h3>Messages</h3>
+
+        @if (ViewData["SelectedChannel"] != null)
+        {
+            <h4>Messages for @ViewData["SelectedChannel"]</h4>
+
+            <ul style="list-style: none; padding: 0;">
+                @foreach (var message in (IEnumerable<string>)ViewData["Messages"])
+                {
+                    <li style="padding: 5px; border-bottom: 1px solid #ccc;">
+                        @message
+                    </li>
+                }
+            </ul>
+
+            <form asp-action="SendMessage" method="post">
+                <input type="hidden" name="channelName" value="@ViewData["SelectedChannel"]" />
+                <div style="margin-bottom: 10px;">
+                    <textarea name="message" placeholder="Type your message..." style="width: 100%; padding: 10px;"></textarea>
+                </div>
+                <button type="submit" style="padding: 5px 10px; cursor: pointer;">Send Message</button>
+            </form>
+        }
+        else
+        {
+            <p>Select a channel to view its messages.</p>
+        }
+    </div>
+</div>

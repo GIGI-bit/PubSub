@@ -1,0 +1,24 @@
+﻿@{
+    Layout = null;
+}
+@model IEnumerable<string>
+
+<div>
+    @if (!Model.Any())
+    {
+        <p>No messages yet in this channel.</p>
+    }
+    else
+    {
+        <ul style="list-style: none; padding: 0;">
+            @foreach (var message in Model)
+            {
+                <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;">@message</li>
+            }
+        </ul>
+    }
+    <form asp-action="SendMessage" method="post">
+        <input placeholder="enter message..."/>
+        <button type="submit" style="padding: 5px 10px; cursor: pointer;">Send</button>
+    </form>
+</div>
