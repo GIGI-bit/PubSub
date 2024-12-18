@@ -13,16 +13,25 @@ namespace PubSub.Controllers
         }
         private IEnumerable<string> GetMessagesForChannel(string channelName)
         {
-            var db = _redis.GetDatabase();
             var messages = new List<string>();
 
-            var length = db.ListLength(channelName);
-            var range = db.ListRange(channelName, Math.Max(0, length - 10), length - 1);
+            var subscriber = _redis.GetSubscriber(channelName);
+            if (subscriber != null)
+            {
 
-            foreach (var message in range)
+                subscriber.Subscribe(channelName, (channel, message) =>
             {
                 messages.Add(message.ToString());
+            });
             }
+            //var db = _redis.GetDatabase();
+            //return db.ListRange($"channel:{channelName}:messages").Select(m => m.ToString());
+
+
+            //foreach (var message in messages)
+            //{
+            //    messages.Add(message.ToString());
+            //}
 
             return messages;
         }
@@ -49,21 +58,25 @@ namespace PubSub.Controllers
 
             var messages = GetMessagesForChannel(channelName);
 
-            ViewData["SelectedChannel"] = channelName;
+            TempData["SelectedChannel"] = channelName;
             ViewData["Messages"] = messages;
 
             return View(messages);
         }
         [HttpPost]
-        public IActionResult SendMessage(string channelName, string message)
+        public IActionResult SendMessage(string message)
         {
+            string channelName = TempData["SelectedChannel"].ToString();
             if (string.IsNullOrWhiteSpace(message))
             {
                 TempData["Error"] = "Message cannot be empty.";
                 return RedirectToAction("ChannelMessages", new { channelName });
             }
 
-            AddMessageToChannel(channelName, message);
+            //AddMessageToChannel(channelName, message);
+            var publisher = _redis.GetSubscriber();
+            publisher.Publish(channelName,message);
+
 
             TempData["Success"] = "Message sent successfully!";
             return RedirectToAction("ChannelMessages", new { channelName });
@@ -71,20 +84,19 @@ namespace PubSub.Controllers
 
 
         [HttpPost]
-        public IActionResult CreateChannel(string channelName)
+        public  IActionResult CreateChannel(string channelName)
         {
             if (string.IsNullOrWhiteSpace(channelName))
             {
                 TempData["Error"] = "Channel name cannot be empty.";
                 return RedirectToAction("Index");
             }
-
-            var db = _redis.GetSubscriber();
-
-            db.Subscribe(channelName, (channel, message) =>
+            var db = _redis.GetDatabase();
+            if (!db.SetContains("channels", channelName))
             {
-                Console.WriteLine($"Message received on channel {channel}: {message}");
-            });
+                db.SetAdd("channels", channelName);
+            }
+
 
             TempData["Success"] = "Channel created successfully and subscribed!";
             return RedirectToAction("Index");

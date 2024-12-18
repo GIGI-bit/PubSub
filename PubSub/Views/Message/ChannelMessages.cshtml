@@ -1,5 +1,6 @@
 ﻿@{
     Layout = null;
+    // var channelName=Temp
 }
 @model IEnumerable<string>
 
@@ -18,7 +19,7 @@
         </ul>
     }
     <form asp-action="SendMessage" method="post">
-        <input placeholder="enter message..."/>
+        <input name="message" placeholder="enter message..."/>
         <button type="submit" style="padding: 5px 10px; cursor: pointer;">Send</button>
     </form>
 </div>
